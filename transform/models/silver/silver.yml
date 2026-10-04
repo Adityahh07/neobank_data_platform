@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: transactions
+    description: >
+      One row per PaySim transaction, typed and quality-flagged. Customer IDs are
+      masked (sender_key / receiver_key); see pii.customer_map for the restricted lookup.
+    columns:
+      - name: txn_id
+        description: sha256(source file hash || ':' || source row) - stable across re-runs
+        data_tests: [unique, not_null]
+      - name: event_ts
+        description: Synthetic UTC timestamp derived from PaySim step (hours)
+        data_tests: [not_null]
+      - name: event_date
+        data_tests: [not_null]
+      - name: txn_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [PAYMENT, TRANSFER, CASH_OUT, CASH_IN, DEBIT]
+      - name: amount_eur
+        description: Transaction amount, exact decimal. Totals are calculated from this column only.
+        data_tests:
+          - not_null
+          - between:
+              name: amount_not_negative
+              arguments:
+                min_value: 0
+          - between:
+              name: amount_within_limit_except_transfers
+              description: 10M per-transaction limit applies to all types except TRANSFER (requirements §8)
+              arguments:
+                min_value: 0
+                max_value: "{{ var('max_transaction_amount') }}"
+              config:
+                where: "txn_type <> 'TRANSFER'"
+      - name: sender_key
+        description: Masked sender customer ID
+        data_tests: [not_null]
+      - name: receiver_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [customer, merchant]
+      - name: is_fraud
+        description: Confirmed fraud (ground truth)
+        data_tests: [not_null]
+      - name: is_flagged
+        description: Blocked by the core-system fraud rule
+        data_tests: [not_null]
+      - name: balance_mismatch
+        description: Sender balance change does not equal the amount. Informational - row is kept.

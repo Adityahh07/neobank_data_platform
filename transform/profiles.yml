@@ -1,0 +1,13 @@
+# Connection settings per environment (docs/architecture.md §7).
+# Run dbt from the transform/ folder; paths are relative to it.
+neobank:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../data/dev/neobank.duckdb
+      threads: 4
+    prod:
+      type: duckdb
+      path: ../data/prod/neobank.duckdb
+      threads: 4

@@ -1,6 +1,12 @@
 # Data never goes to git (large files, and in real fintech: sensitive)
 data/
 
+# dbt build output
+transform/target/
+transform/logs/
+transform/dbt_packages/
+transform/.user.yml
+
 # Python
 .venv/
 __pycache__/
