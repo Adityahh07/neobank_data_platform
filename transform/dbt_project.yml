@@ -1,0 +1,22 @@
+name: neobank
+version: "1.0.0"
+profile: neobank
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+vars:
+  # PaySim `step` 1 = this instant (synthetic calendar, see docs/requirements.md §15)
+  simulation_start: "2025-01-01 00:00:00"
+  max_transaction_amount: 10000000
+  flag_rule_min_amount: 200000
+
+models:
+  neobank:
+    silver:
+      +schema: silver
+      +materialized: table
+    pii:
+      +schema: pii
+      +materialized: table

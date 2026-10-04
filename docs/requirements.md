@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Draft v2 – updated after profiling review, awaiting stakeholder sign-off |
+| **Status** | Draft v3 – updated after profiling review and first silver build, awaiting stakeholder sign-off |
 | **Owner** | Data Engineering |
 | **Stakeholders** | Priya (Head of Risk), Daniel (Finance Manager), Sara (Head of Operations) |
 | **Last updated** | 2026-10-05 (see §19 change log) |
@@ -96,7 +96,7 @@ Agreed terms. Every report must use these exact definitions.
 | Merchant (`M…`) zero balances are valid, not errors | Operations |
 | Rows where balances don't add up are **kept and flagged** (`balance_mismatch`), never deleted or corrected | Operations, Finance |
 | Zero-amount transactions are valid (fraud attempts on emptied accounts) and kept | Risk |
-| Per-transaction limit is **10,000,000**; any `amount` above it is a data error and fails quality checks | Finance |
+| Per-transaction limit is **10,000,000** for PAYMENT, CASH_IN, CASH_OUT and DEBIT; above it is a data error and fails quality checks. **TRANSFER has no hard limit** (business transfers) | Finance |
 | `amount` must never be negative | Data Engineering |
 | Raw data is never modified; all corrections happen in later layers (audit trail) | Data Engineering |
 | Re-running a pipeline must never create duplicate transactions | Data Engineering |
@@ -232,3 +232,4 @@ since both depend on it.
 | v2 | 2026-10-05 | Stretch rule changed to "account emptied" | TRANSFER → CASH_OUT can't be linked by account ID |
 | v2 | 2026-10-05 | Added rules: totals from `amount` only, 10M limit, zero amounts valid | Profiling: unreliable balances, 10M cap, 16 zero-amount fraud cash-outs |
 | v2 | 2026-10-05 | Row-count alert replaced by load-completeness check; volume anomaly disabled for PaySim | Profiling: daily rows range from 272 to 574,255 |
+| v3 | 2026-10-05 | 10M limit no longer applies to TRANSFER | Silver quality test failed: 2,443 legitimate (non-fraud) TRANSFERs between 10M and 92.4M. The 10M cap seen in profiling applied to fraud only (Finance) |

@@ -128,7 +128,7 @@ def ingest(source: Path, lake: Path, force: bool = False) -> dict:
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--source", type=Path, required=True, help="PaySim CSV file")
-    p.add_argument("--lake", type=Path, default=Path("data/lake"), help="lake root")
+    p.add_argument("--lake", type=Path, default=Path("data/dev/lake"), help="lake root")
     p.add_argument("--force", action="store_true", help="re-ingest an already seen file")
     args = p.parse_args()
     ingest(args.source, args.lake, args.force)

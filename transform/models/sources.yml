@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: bronze_paysim
+    description: Raw PaySim transactions as landed by ingestion/paysim_to_bronze.py
+    meta:
+      external_location: >-
+        read_parquet('../data/{{ target.name }}/lake/bronze/paysim/{name}/*/*.parquet', hive_partitioning = true)
+    tables:
+      - name: transactions
+        description: One row per CSV line; all source columns are strings.
