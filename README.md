@@ -9,7 +9,7 @@ card payments, reconciliation and fraud monitoring.
 - [x] **Requirements** - stakeholder needs, KPI definitions, data rules: [docs/requirements.md](docs/requirements.md)
 - [x] **Source profiling** - PaySim data checked against stakeholder assumptions: [analysis/profile_paysim.py](analysis/profile_paysim.py)
 - [x] **Historical transactions (batch CSV -> bronze Parquet)**
-- [ ] Architecture and data model design
+- [x] **Architecture and data model design** - layers, tools, table designs, conventions: [docs/architecture.md](docs/architecture.md)
 - [ ] FX rates API (Frankfurter)
 - [ ] Core banking Postgres + CDC
 - [ ] Card-payment stream (Kafka/Redpanda)
