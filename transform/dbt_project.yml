@@ -11,6 +11,7 @@ vars:
   simulation_start: "2025-01-01 00:00:00"
   max_transaction_amount: 10000000
   flag_rule_min_amount: 200000
+  fx_quote_currencies: ['USD', 'GBP']
 
 models:
   neobank:

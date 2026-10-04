@@ -100,7 +100,7 @@ Agreed terms. Every report must use these exact definitions.
 | `amount` must never be negative | Data Engineering |
 | Raw data is never modified; all corrections happen in later layers (audit trail) | Data Engineering |
 | Re-running a pipeline must never create duplicate transactions | Data Engineering |
-| On weekends/holidays (no ECB rate), the most recent previous rate is used | Data Engineering – *to confirm with Finance* |
+| On weekends/holidays (no ECB rate), the most recent previous rate is used and the day is marked as filled | Finance |
 
 ## 9. Access and privacy
 
@@ -177,7 +177,7 @@ since both depend on it.
 ## 15. Assumptions
 
 - PaySim `step` = hour of a 30-day simulation; anchored to 2025-01-01 (synthetic dates).
-- PaySim amounts are in the local currency, assumed to be **EUR** so ECB rates can convert to USD/GBP.
+- PaySim amounts are in **EUR** (confirmed by Finance), so ECB rates convert them to USD/GBP.
 - All fraud labels in the historical file are **final** (all cases closed).
 - `isFlaggedFraud` is set by the source system; the pipeline receives it, not calculates it.
 - Unflagged fraud is assumed to be money lost; blocked (flagged) fraud lost nothing.
@@ -190,8 +190,8 @@ since both depend on it.
 | 1 | Verify that one customer ID = one customer | Data Engineering | ✅ Closed – IDs unique; customers almost never repeat (6,353,307 distinct senders in 6,362,620 rows) |
 | 2 | Verify flags match the stated rule | Data Engineering | ✅ Closed – rule redefined as "blocked TRANSFER > 200,000" (§5) |
 | 3 | Define the daily suspicious list | Risk | ✅ Closed – suspicious **transactions**, not accounts (§6) |
-| 4 | Confirm weekend/holiday FX rate handling | Finance | Open |
-| 5 | Confirm local currency (assumed EUR) | Finance | Open |
+| 4 | Confirm weekend/holiday FX rate handling | Finance | ✅ Closed – carry forward last published rate, mark as filled |
+| 5 | Confirm local currency (assumed EUR) | Finance | ✅ Closed – amounts are EUR |
 | 6 | Choose alert channel | Operations | ✅ Closed – Discord (set up in the alerting step) |
 | 7 | 3 TRANSFERs > 200,000 with unchanged sender balance were **not** flagged – why? | Risk → core system team | Open |
 
@@ -232,4 +232,5 @@ since both depend on it.
 | v2 | 2026-10-05 | Stretch rule changed to "account emptied" | TRANSFER → CASH_OUT can't be linked by account ID |
 | v2 | 2026-10-05 | Added rules: totals from `amount` only, 10M limit, zero amounts valid | Profiling: unreliable balances, 10M cap, 16 zero-amount fraud cash-outs |
 | v2 | 2026-10-05 | Row-count alert replaced by load-completeness check; volume anomaly disabled for PaySim | Profiling: daily rows range from 272 to 574,255 |
+| v3 | 2026-10-05 | FX: weekend/holiday rates carried forward and marked; amounts confirmed as EUR | Open items 4 and 5 closed with Finance before building FX ingestion |
 | v3 | 2026-10-05 | 10M limit no longer applies to TRANSFER | Silver quality test failed: 2,443 legitimate (non-fraud) TRANSFERs between 10M and 92.4M. The 10M cap seen in profiling applied to fraud only (Finance) |

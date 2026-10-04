@@ -52,3 +52,27 @@ models:
         data_tests: [not_null]
       - name: balance_mismatch
         description: Sender balance change does not equal the amount. Informational - row is kept.
+
+  - name: fx_rates
+    description: >
+      Daily EUR reference rates (ECB via Frankfurter), one row per calendar day per
+      quote currency. Weekends/holidays carry forward the last published rate.
+    columns:
+      - name: rate_date
+        data_tests: [not_null]
+      - name: quote_currency
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: "{{ var('fx_quote_currencies') }}"
+      - name: rate
+        description: Units of quote currency per 1 EUR
+        data_tests:
+          - not_null
+          - between:
+              name: fx_rate_positive
+              arguments:
+                min_value: 0.000001
+      - name: is_filled
+        description: True when carried forward from an earlier published date
+        data_tests: [not_null]

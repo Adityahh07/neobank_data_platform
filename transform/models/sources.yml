@@ -9,3 +9,13 @@ sources:
     tables:
       - name: transactions
         description: One row per CSV line; all source columns are strings.
+
+  - name: bronze_fx
+    description: Raw Frankfurter API responses as landed by ingestion/fx_rates_to_bronze.py
+    meta:
+      # rate_date is stored inside each file, so folder names are not read as columns
+      external_location: >-
+        read_parquet('../data/{{ target.name }}/lake/bronze/fx/{name}/*/*.parquet', hive_partitioning = false)
+    tables:
+      - name: rates
+        description: One row per published ECB date; rates_json holds the raw rates object.
