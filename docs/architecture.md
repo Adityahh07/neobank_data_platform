@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Draft – for review |
+| **Status** | Approved – decisions confirmed (§10) |
 | **Implements** | [requirements.md](requirements.md) v2 |
 | **Last updated** | 2026-10-05 |
 
@@ -221,9 +221,10 @@ neobank_data_platform/
 | **2** | Docker: MinIO, Postgres core banking with CDC, Airflow orchestration |
 | **3** | Kafka card stream, settlement files + reconciliation, stretch fraud rule |
 
-## 10. Decisions to confirm in review
+## 10. Decisions (confirmed in review, 2026-10-05)
 
-1. **Airflow vs Dagster** – Airflow chosen for job-market relevance; it needs Docker, so orchestration starts
-   in Phase 2. Until then pipelines run by command. *Alternative:* Dagster now, natively on Windows.
-2. **Streamlit vs Metabase** for dashboards.
-3. **No customer dimension** in Phase 1 (justified by profiling, §4.3).
+| # | Decision | Outcome | Consequence |
+|---|---|---|---|
+| 1 | Orchestrator | ✅ **Airflow** – most widely used in industry | Needs Docker, so orchestration starts in Phase 2; until then pipelines run by command |
+| 2 | Dashboards | ✅ **Streamlit** | Pure Python on DuckDB; no extra server |
+| 3 | Customer dimension | ✅ **Not in Phase 1** | Source has no customer attributes and IDs almost never repeat (§4.3); `dim_customer` with SCD2 is built in Phase 2 from core banking data |
