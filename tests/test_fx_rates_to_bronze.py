@@ -1,13 +1,10 @@
-import sys
 from datetime import date
-from pathlib import Path
 
-import pyarrow.dataset as ds
+import duckdb
 import pytest
 import requests
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ingestion"))
-import fx_rates_to_bronze as fx  # noqa: E402
+from ingestion import fx_rates_to_bronze as fx
 
 
 class FakeResponse:
@@ -48,7 +45,9 @@ def no_sleep(monkeypatch):
 
 
 def read_bronze(lake):
-    return ds.dataset(lake / "bronze" / "fx" / "rates", format="parquet", partitioning="hive").to_table()
+    # Read with DuckDB: pyarrow.dataset can be blocked by Windows Smart App Control.
+    pattern = (lake / "bronze" / "fx" / "rates" / "*" / "*.parquet").as_posix()
+    return duckdb.sql(f"select * from read_parquet('{pattern}')").to_arrow_table()
 
 
 def test_writes_one_partition_per_rate_date_with_raw_json(tmp_path):

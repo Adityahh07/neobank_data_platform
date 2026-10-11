@@ -1,10 +1,8 @@
-import sys
 from pathlib import Path
 
-import pyarrow.dataset as ds
+import duckdb
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ingestion"))
-from paysim_to_bronze import ingest  # noqa: E402
+from ingestion.paysim_to_bronze import ingest
 
 SAMPLE = """step,type,amount,nameOrig,oldbalanceOrg,newbalanceOrig,nameDest,oldbalanceDest,newbalanceDest,isFraud,isFlaggedFraud
 1,PAYMENT,9839.64,C1231006815,170136.0,160296.36,M1979787155,0.0,0.0,0,0
@@ -20,9 +18,9 @@ def make_sample(tmp_path: Path) -> Path:
 
 
 def read_bronze(lake: Path):
-    return ds.dataset(
-        lake / "bronze" / "paysim" / "transactions", format="parquet", partitioning="hive"
-    ).to_table()
+    # Read with DuckDB: pyarrow.dataset can be blocked by Windows Smart App Control.
+    pattern = (lake / "bronze" / "paysim" / "transactions" / "*" / "*.parquet").as_posix()
+    return duckdb.sql(f"select * from read_parquet('{pattern}', hive_partitioning = true)").to_arrow_table()
 
 
 def test_partitions_rows_by_day_and_keeps_raw_values(tmp_path):

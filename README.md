@@ -13,7 +13,8 @@ card payments, reconciliation and fraud monitoring.
 - [x] **Silver transactions (dbt)** - typed, masked, quality-flagged, 17 data tests
 - [x] **FX rates API (Frankfurter)** - incremental REST ingestion with retries; weekend/holiday gaps filled in silver
 - [x] **Gold layer (dbt)** - fact, dimensions and report tables for Risk and Finance, reconciled to the cent
-- [ ] Alerts, dashboards, CI
+- [x] **Pipeline runner, run log and Discord alerts** - one command runs everything; failures alert once; [runbook](docs/runbook.md)
+- [ ] Dashboards, CI
 - [ ] Core banking Postgres + CDC, Airflow (Phase 2)
 - [ ] Card-payment stream, settlement reconciliation (Phase 3)
 
@@ -25,6 +26,19 @@ python -m venv .venv
 pip install -r requirements.txt
 pytest
 ```
+
+## Run the whole pipeline
+
+```powershell
+python run_pipeline.py --env dev     # or --env prod
+```
+
+Runs PaySim → bronze, FX API → bronze and `dbt build` in order, records every step in
+`ops.pipeline_runs`, stops at the first failure and sends **one** alert to Discord (prod only,
+or with `--alerts`). Exit code `0` = success, `1` = failure - ready for a scheduler.
+
+Alerts need a Discord webhook: copy `.env.example` to `.env` and set `DISCORD_WEBHOOK_URL`.
+`.env` is git-ignored. What to do when an alert fires: [docs/runbook.md](docs/runbook.md).
 
 ## Step 1: PaySim -> bronze
 
