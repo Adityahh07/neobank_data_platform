@@ -5,6 +5,7 @@ profile: neobank
 model-paths: ["models"]
 test-paths: ["tests"]
 macro-paths: ["macros"]
+seed-paths: ["seeds"]
 
 vars:
   # PaySim `step` 1 = this instant (synthetic calendar, see docs/requirements.md §15)
@@ -21,3 +22,10 @@ models:
     pii:
       +schema: pii
       +materialized: table
+    gold:
+      +schema: gold
+      +materialized: table
+
+seeds:
+  neobank:
+    +schema: reference

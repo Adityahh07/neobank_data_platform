@@ -1,0 +1,6 @@
+txn_type,direction,can_be_fraud,description
+PAYMENT,out,false,Customer pays a merchant
+TRANSFER,out,true,Customer sends money to another account
+CASH_OUT,out,true,Customer withdraws cash through an agent
+CASH_IN,in,false,Customer deposits cash through an agent
+DEBIT,out,false,Customer sends money to a bank account
