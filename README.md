@@ -11,7 +11,7 @@ card payments, reconciliation and fraud monitoring.
 - [x] **Historical transactions (batch CSV -> bronze Parquet)**
 - [x] **Architecture and data model design** - layers, tools, table designs, conventions: [docs/architecture.md](docs/architecture.md)
 - [x] **Silver transactions (dbt)** - typed, masked, quality-flagged, 17 data tests
-- [ ] FX rates API (Frankfurter)
+- [x] **FX rates API (Frankfurter)** - incremental REST ingestion with retries; weekend/holiday gaps filled in silver
 - [ ] Gold models, alerts, dashboards, CI
 - [ ] Core banking Postgres + CDC, Airflow (Phase 2)
 - [ ] Card-payment stream, settlement reconciliation (Phase 3)
@@ -60,7 +60,20 @@ Design choices:
 - **Synthetic dates** - PaySim `step` is "hour N of a 30-day simulation"; it is anchored to
   2025-01-01 so the data can be partitioned by day.
 
-## Step 2: bronze -> silver (dbt)
+## Step 2: FX rates API -> bronze
+
+```powershell
+python ingestion/fx_rates_to_bronze.py --lake data/prod/lake --end 2025-01-31
+```
+
+- **Incremental** - without `--start`, a run begins the day after the latest date already loaded
+  (the watermark), so daily runs only fetch new days.
+- **Retries** - timeouts, HTTP 429 and 5xx are retried with exponential backoff (2, 4, 8, 16 s);
+  other 4xx errors fail immediately.
+- **Raw JSON kept** - each published date is stored as received, one file per date
+  (re-loads overwrite, never duplicate).
+
+## Step 3: bronze -> silver (dbt)
 
 ```powershell
 cd transform
@@ -74,6 +87,7 @@ dbt build --profiles-dir . --target prod   # prod
 | Table | What it is |
 |---|---|
 | `silver.transactions` | One row per transaction: exact decimals, synthetic timestamps, masked customer IDs, `balance_mismatch` flag |
+| `silver.fx_rates` | One EUR rate per calendar day per currency (USD, GBP); weekends/holidays carry the last published rate, marked `is_filled` |
 | `pii.customer_map` | Restricted lookup from masked key to real customer ID |
 
 Customer IDs are masked with a salted SHA-256. Set the salt with the `PII_SALT` environment
