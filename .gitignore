@@ -1,6 +1,9 @@
 # Data never goes to git (large files, and in real fintech: sensitive)
 data/
 
+# Secrets (webhook URL, salts) - see .env.example
+.env
+
 # dbt build output
 transform/target/
 transform/logs/
