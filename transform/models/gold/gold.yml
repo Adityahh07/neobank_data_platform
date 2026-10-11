@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: One row per calendar day covered by the transactions.
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+
+  - name: dim_txn_type
+    description: One row per transaction type (from seeds/txn_types.csv).
+    columns:
+      - name: txn_type
+        data_tests: [unique, not_null]
+      - name: direction
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [in, out]
+
+  - name: fact_transactions
+    description: >
+      One row per transaction with USD amount and fraud-rule outcome.
+      Grain and totals are reconciled against silver.transactions.
+    columns:
+      - name: txn_id
+        data_tests: [unique, not_null]
+      - name: event_date
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: txn_type
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_txn_type')
+                field: txn_type
+      - name: eur_usd_rate
+        data_tests: [not_null]
+      - name: amount_usd
+        description: amount_eur x that day's EUR->USD rate, rounded to the cent per transaction
+        data_tests: [not_null]
+      - name: rule_outcome
+        description: caught / missed / false_alarm / clean (requirements §5)
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [caught, missed, false_alarm, clean]
+
+  - name: agg_daily_by_type
+    description: One row per day per transaction type - counts, values, fraud rate.
+
+  - name: agg_daily_fraud
+    description: One row per day - fraud trend and fraud value attempted / lost.
+    columns:
+      - name: event_date
+        data_tests: [unique, not_null]
+
+  - name: agg_rule_performance
+    description: One row per week (Monday start) - caught, missed, false alarms, catch rate, precision.
+    columns:
+      - name: week_start
+        data_tests: [unique, not_null]
+
+  - name: rpt_suspicious_transactions
+    description: >
+      Risk's morning review list - flagged or confirmed-fraud transactions from the
+      previous day, largest first. RISK ONLY: contains unmasked customer IDs.
+    columns:
+      - name: txn_id
+        data_tests: [unique, not_null]
+      - name: sender_customer_id
+        data_tests: [not_null]

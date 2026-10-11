@@ -12,7 +12,8 @@ card payments, reconciliation and fraud monitoring.
 - [x] **Architecture and data model design** - layers, tools, table designs, conventions: [docs/architecture.md](docs/architecture.md)
 - [x] **Silver transactions (dbt)** - typed, masked, quality-flagged, 17 data tests
 - [x] **FX rates API (Frankfurter)** - incremental REST ingestion with retries; weekend/holiday gaps filled in silver
-- [ ] Gold models, alerts, dashboards, CI
+- [x] **Gold layer (dbt)** - fact, dimensions and report tables for Risk and Finance, reconciled to the cent
+- [ ] Alerts, dashboards, CI
 - [ ] Core banking Postgres + CDC, Airflow (Phase 2)
 - [ ] Card-payment stream, settlement reconciliation (Phase 3)
 
@@ -89,6 +90,21 @@ dbt build --profiles-dir . --target prod   # prod
 | `silver.transactions` | One row per transaction: exact decimals, synthetic timestamps, masked customer IDs, `balance_mismatch` flag |
 | `silver.fx_rates` | One EUR rate per calendar day per currency (USD, GBP); weekends/holidays carry the last published rate, marked `is_filled` |
 | `pii.customer_map` | Restricted lookup from masked key to real customer ID |
+
+### Gold
+
+| Table | Grain | Answers |
+|---|---|---|
+| `gold.fact_transactions` | transaction | USD amount (daily ECB rate), fraud-rule outcome: caught / missed / false_alarm / clean |
+| `gold.dim_date` | day | weekday, weekend, ISO week, month |
+| `gold.dim_txn_type` | type | direction, whether fraud can occur (from `seeds/txn_types.csv`) |
+| `gold.agg_daily_by_type` | day x type | count and value (EUR/USD), fraud rate by count and by value |
+| `gold.agg_daily_fraud` | day | fraud trend, fraud value attempted vs lost |
+| `gold.agg_rule_performance` | week | caught, missed, false alarms, catch rate, precision |
+| `gold.rpt_suspicious_transactions` | transaction | Risk's morning review list (unmasked IDs - Risk only) |
+
+Reconciliation tests prove gold matches silver (rows and EUR total to the cent) and that
+every report table adds up to the fact table.
 
 Customer IDs are masked with a salted SHA-256. Set the salt with the `PII_SALT` environment
 variable (a dev-only default is used when it is not set).

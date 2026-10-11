@@ -145,6 +145,9 @@ erDiagram
 ```
 
 - `rule_outcome` = `caught` / `missed` / `false_alarm` / `clean` (requirements §5).
+- `amount_usd` = `amount_eur` × that day's EUR→USD rate, rounded to the cent **per transaction**, so
+  report totals are sums of booked cent amounts.
+- `dim_txn_type` is reference data maintained in a dbt **seed** (`transform/seeds/txn_types.csv`).
 - **No customer dimension:** profiling showed 99.9% of customers appear once, so a customer dimension
   (or SCD2 history) would add no value for this source. Revisit when core banking CDC arrives (Phase 2).
 
