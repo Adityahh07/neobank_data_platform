@@ -14,7 +14,8 @@ card payments, reconciliation and fraud monitoring.
 - [x] **FX rates API (Frankfurter)** - incremental REST ingestion with retries; weekend/holiday gaps filled in silver
 - [x] **Gold layer (dbt)** - fact, dimensions and report tables for Risk and Finance, reconciled to the cent
 - [x] **Pipeline runner, run log and Discord alerts** - one command runs everything; failures alert once; [runbook](docs/runbook.md)
-- [ ] Dashboards, CI
+- [x] **Dashboards (Streamlit)** - Risk, Finance and Operations views on the gold layer
+- [ ] CI (GitHub Actions)
 - [ ] Core banking Postgres + CDC, Airflow (Phase 2)
 - [ ] Card-payment stream, settlement reconciliation (Phase 3)
 
@@ -26,6 +27,30 @@ python -m venv .venv
 pip install -r requirements.txt
 pytest
 ```
+
+## Dashboards
+
+```powershell
+python -m streamlit run dashboards/app.py
+```
+
+One view per stakeholder (sidebar "View as", or a bookmark like `?view=Finance`):
+
+| View | Shows |
+|---|---|
+| **Risk** | Rule catch rate and precision, fraud rate by type (count vs value), weekly rule performance, daily fraud trend, morning review list (unmasked IDs - Risk only) |
+| **Finance** | Count and value in EUR/USD, daily volume by type, monthly summary with CSV export |
+| **Operations** | Last run status, data freshness, run history and per-step details from `ops.pipeline_runs` |
+
+![Risk dashboard](docs/images/dashboard_risk.png)
+
+<details>
+<summary>Finance and Operations views</summary>
+
+![Finance dashboard](docs/images/dashboard_finance.png)
+![Operations dashboard](docs/images/dashboard_operations.png)
+
+</details>
 
 ## Run the whole pipeline
 
