@@ -1,5 +1,7 @@
 # Neobank Data Platform
 
+[![CI](https://github.com/Adityahh07/neobank_data_platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Adityahh07/neobank_data_platform/actions/workflows/ci.yml)
+
 A local, end-to-end data engineering project that models the data platform of a
 small digital bank: batch files, APIs, a core-banking database (CDC), streaming
 card payments, reconciliation and fraud monitoring.
@@ -15,7 +17,8 @@ card payments, reconciliation and fraud monitoring.
 - [x] **Gold layer (dbt)** - fact, dimensions and report tables for Risk and Finance, reconciled to the cent
 - [x] **Pipeline runner, run log and Discord alerts** - one command runs everything; failures alert once; [runbook](docs/runbook.md)
 - [x] **Dashboards (Streamlit)** - Risk, Finance and Operations views on the gold layer
-- [ ] CI (GitHub Actions)
+- [x] **CI (GitHub Actions)** - every PR runs the Python tests and a full `dbt build` on a committed sample
+- **Phase 1 complete**
 - [ ] Core banking Postgres + CDC, Airflow (Phase 2)
 - [ ] Card-payment stream, settlement reconciliation (Phase 3)
 
@@ -26,6 +29,27 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 pytest
+```
+
+## Continuous integration
+
+Every pull request and every push to `main` runs [.github/workflows/ci.yml](.github/workflows/ci.yml)
+on a fresh Ubuntu machine:
+
+1. `pytest` - ingestion, alerting and pipeline-runner tests (external APIs are mocked)
+2. `tests/ci_build_lake.py` - builds a bronze lake with the **real ingestion code** from committed
+   fixtures: a 2,016-row PaySim sample (all 31 days, all 5 types, 316 fraud, all 16 flagged) and a
+   saved FX API response
+3. `dbt build --target ci` - every silver and gold model plus all 55 data tests
+
+CI never needs the 471 MB source file or the live FX API, so an outage elsewhere can't fail a PR.
+
+Run the same checks locally:
+
+```powershell
+pytest
+python tests/ci_build_lake.py
+cd transform; dbt build --profiles-dir . --target ci
 ```
 
 ## Dashboards

@@ -1,0 +1,58 @@
+# Runs on every pull request and every push to main.
+# A fresh Ubuntu machine installs the project, runs the Python tests, builds a
+# small bronze lake from committed fixtures and runs `dbt build` (all models +
+# all data quality tests) against it. The PR shows a green tick or a red cross.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the older, now-irrelevant run
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python tests + dbt build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Python tests (ingestion, alerts, pipeline runner)
+        run: pytest -v
+
+      - name: Build CI bronze lake from fixtures
+        run: python tests/ci_build_lake.py
+
+      - name: dbt build - silver + gold models and all data tests
+        working-directory: transform
+        run: dbt build --profiles-dir . --target ci
+
+      - name: Keep dbt results when the build fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-results
+          path: |
+            transform/target/run_results.json
+            transform/logs/dbt.log
+          if-no-files-found: ignore
