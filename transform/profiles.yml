@@ -11,3 +11,7 @@ neobank:
       type: duckdb
       path: ../data/prod/neobank.duckdb
       threads: 4
+    ci:                       # GitHub Actions: built from tests/fixtures by tests/ci_build_lake.py
+      type: duckdb
+      path: ../data/ci/neobank.duckdb
+      threads: 4
